@@ -1,1 +1,172 @@
-sdfgsdgfsdgsdffgfsd
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+// Basic DOM queries
+const sliders = document.querySelectorAll(".slider");
+const numSlides = sliders.length;
+const bgImage = document.querySelector(".bg-image");
+let lastActiveIndex = 0;
+
+// Simple image preload
+sliders.forEach(slider => {
+    const bgUrl = slider.getAttribute("data-bg");
+    if (bgUrl) {
+        const img = new Image();
+        img.src = bgUrl;
+    }
+});
+
+// Set initial states
+const firstBg = sliders[0]?.getAttribute("data-bg");
+if (bgImage && firstBg) {
+    bgImage.style.backgroundImage = `url('${firstBg}')`;
+}
+
+// Set initial visibility
+sliders.forEach((s, index) => {
+    const h = s.querySelector("h2.heading");
+    const ci = s.querySelector(".center-image");
+
+    if (index === 0) {
+        gsap.set(h, { autoAlpha: 1, y: 0 });
+        ci.style.display = "block";
+    } else {
+        gsap.set(h, { autoAlpha: 0 });
+        ci.style.display = "none";
+    }
+});
+
+// Main timeline
+const tlnw = gsap.timeline({
+    scrollTrigger: {
+        trigger: ".hero.second",
+        start: "top top",
+        end: `+=${window.innerHeight * (numSlides - 1)}`,
+        scrub: 0.5,
+        pin: true,
+        onUpdate: (self) => {
+            const progress = self.progress;
+            let activeIndex = Math.floor(progress * numSlides);
+            
+            if (activeIndex >= numSlides) activeIndex = numSlides - 1;
+            
+            if (activeIndex !== lastActiveIndex) {
+                sliders.forEach((s, i) => {
+                    const h = s.querySelector("h2.heading");
+                    const ci = s.querySelector(".center-image");
+
+                    if (i === activeIndex) {
+                        gsap.to(h, {
+                            autoAlpha: 1,
+                            duration: 0.3,
+                            ease: "power2.out"
+                        });
+                        ci.style.display = "block";
+                        const bgUrl = s.getAttribute("data-bg");
+                        if (bgUrl) bgImage.style.backgroundImage = `url('${bgUrl}')`;
+                    } else {
+                        gsap.to(h, {
+                            autoAlpha: 0,
+                            duration: 0.3,
+                            ease: "power2.out"
+                        });
+                        ci.style.display = "none";
+                    }
+                });
+                lastActiveIndex = activeIndex;
+            }
+        }
+    }
+});
+
+// Animate headings
+sliders.forEach((slider, i) => {
+    if (i !== 0) {
+        const heading = slider.querySelector("h2.heading");
+        gsap.set(heading, { y: 30, autoAlpha: 0 });
+
+        tlnw.to(heading, {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.5,
+            ease: "power2.out"
+        }, i);
+    }
+});
+
+// Blog section
+const blogsliders = document.querySelectorAll("section.blog .item");
+const blognumSlides = blogsliders.length;
+
+const tlnwblog = gsap.timeline({
+    scrollTrigger: {
+        trigger: "section.blog",
+        start: "top top",
+        end: `+=${window.innerHeight * blognumSlides}`,
+        scrub: 0.5,
+        pin: true
+    }
+});
+
+blogsliders.forEach((slider, i) => {
+    const heading = slider.querySelector("h2.heading");
+    const image = slider.querySelector("img");
+    const content = slider.querySelector("p.content");
+
+    gsap.set([heading, image, content], { y: 50, autoAlpha: 0 });
+
+    tlnwblog.to([heading, image, content], {
+        y: 0,
+        autoAlpha: 1,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: "power2.out",
+        onStart: () => {
+            blogsliders.forEach((s, index) => {
+                if (index !== i) {
+                    const h = s.querySelector("h2.heading");
+                    const img = s.querySelector("img");
+                    const p = s.querySelector("p.content");
+                    gsap.set([h, img, p], { autoAlpha: 0 });
+                }
+            });
+        }
+    }, i);
+});
+
+// Process section
+const tl = gsap.timeline({
+    scrollTrigger: {
+        trigger: ".process",
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 0.5
+    }
+});
+
+gsap.set([".border.top", ".border.bottom"], { width: "0%" });
+gsap.set([".border.right", ".border.left"], { height: "0%" });
+
+tl.to(".border.top", { width: "100%", duration: 0.25, ease: "power2.inOut" })
+  .to(".border.right", { height: "100%", duration: 0.25, ease: "power2.inOut" })
+  .to(".border.bottom", { width: "100%", duration: 0.25, ease: "power2.inOut", x: "0%" })
+  .to(".border.left", { height: "100%", duration: 0.25, ease: "power2.inOut", y: "0%" });
+
+// Popup handling
+document.addEventListener('wpcf7mailsent', function(event) {
+    const popup = document.getElementById('thankYouPopup');
+    if (!popup) return;
+    
+    popup.style.display = 'flex';
+    void popup.offsetWidth;
+    popup.classList.add('active');
+}, false);
+
+function closeThankYouPopup() {
+    const popup = document.getElementById('thankYouPopup');
+    if (!popup) return;
+    
+    popup.classList.remove('active');
+    setTimeout(() => {
+        popup.style.display = 'none';
+    }, 300);
+}
