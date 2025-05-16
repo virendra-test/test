@@ -1,4 +1,4 @@
-gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+gsap.regijsterPlugin(ScrollTrigger, ScrollToPlugin);
 
 // Basic DOM queries
 const sliders = document.querySelectorAll(".slider");
